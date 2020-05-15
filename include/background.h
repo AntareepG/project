@@ -60,13 +60,12 @@ struct background
   double Omega0_lambda; /**< \f$ \Omega_{0_\Lambda} \f$: cosmological constant */
 
   double Omega0_fld; /**< \f$ \Omega_{0 de} \f$: fluid */
-  double Omega0_ULAfld; /* ULAfld */
-  double wn_ULAfld;
-  double zc_ULAfld;
-  double freq0_ULAfld;
-  double n_ULAfld;
-  double ac_ULAfld;
-
+  double Omega0_ULA;
+  double n_ULA;
+  double zc_ULA;
+  double wn_ULA;
+  double freq0_ULA;
+  
   enum equation_of_state fluid_equation_of_state; /**< parametrisation scheme for fluid equation of state */
 
   double w0_fld; /**< \f$ w0_{DE} \f$: current fluid equation of state parameter */
@@ -194,8 +193,8 @@ struct background
   int index_bg_rho_lambda;    /**< cosmological constant density */
   int index_bg_rho_fld;       /**< fluid density */
   int index_bg_w_fld;         /**< fluid equation of state */
-  int index_bg_rho_ULAfld; /* ULAfld */
-  int index_bg_w_ULAfld;
+  int index_bg_rho_ULA;       /**< fluid density */
+  int index_bg_w_ULA;   
   int index_bg_rho_ur;        /**< relativistic neutrinos/relics density */
   int index_bg_rho_idm_dr;    /**< density of dark matter interacting with dark radiation */
   int index_bg_rho_idr;       /**< density of interacting dark radiation */
@@ -278,7 +277,7 @@ struct background
   int index_bi_rho_dcdm;/**< {B} dcdm density */
   int index_bi_rho_dr;  /**< {B} dr density */
   int index_bi_rho_fld; /**< {B} fluid density */
-  int index_bi_rho_ULAfld; /* ULAfld */
+  int index_bi_rho_ULA;
   int index_bi_phi_scf;       /**< {B} scalar field value */
   int index_bi_phi_prime_scf; /**< {B} scalar field derivative wrt conformal time */
 
@@ -310,12 +309,11 @@ struct background
   short has_ncdm;      /**< presence of non-cold dark matter? */
   short has_lambda;    /**< presence of cosmological constant? */
   short has_fld;       /**< presence of fluid with constant w and cs2? */
-  short has_ULAfld; /* ULAfld */
   short has_ur;        /**< presence of ultra-relativistic neutrinos/relics? */
   short has_idr;       /**< presence of interacting dark radiation? */
   short has_idm_dr;    /**< presence of dark matter interacting with dark radiation? */
   short has_curvature; /**< presence of global spatial curvature? */
-
+  short has_ULA;
   //@}
 
   /**
@@ -442,12 +440,13 @@ extern "C" {
                        double * w_fld,
                        double * dw_over_da_fld,
                        double * integral_fld);
-  int background_w_ULAfld(			/* ULAfld */
+                       
+  int background_w_ULA(
                        struct background * pba,
                        double a,
-                       double * w_ULAfld,
-                       double * dw_over_da_ULAfld,
-                       double * integral_ULAfld);
+                       double * w_ULA,
+                       double * dw_over_da_ULA,
+                       double * integral_ULA);
 
   int background_init(
 		      struct precision *ppr,
