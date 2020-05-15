@@ -270,7 +270,7 @@ int background_functions(
   int n_ncdm;
   /* fluid's time-dependent equation of state parameter */
   double w_fld, dw_over_da, integral_fld;
-  double w_ULAfld, dw_over_da_ULA, integral_ULAfld; /* ULAfld */
+  double w_ULA, dw_over_da_U, integral_ULA;
   /* scale factor */
   double a;
   /* scalar field quantities */
@@ -425,20 +425,22 @@ int background_functions(
     p_tot += w_fld * pvecback[pba->index_bg_rho_fld];
     dp_dloga += (a*dw_over_da-3*(1+w_fld)*w_fld)*pvecback[pba->index_bg_rho_fld];
   }
-  
-/*ULAfld*/
-  if (pba->has_ULAfld == _TRUE_) {
+  if (pba->has_ULA == _TRUE_) {
 
-    /* get rho_ULAfld from vector of integrated variables */
-    pvecback[pba->index_bg_rho_ULAfld] = pvecback_B[pba->index_bi_rho_ULAfld];
+    /* get rho_ from vector of integrated variables */
+    pvecback[pba->index_bg_rho_ULA] = pvecback_B[pba->index_bi_rho_ULA];
 
-    /* get w_ULAfld from dedicated function */
-    class_call(background_w_ULAfld(pba,a,&w_ULAfld,&dw_over_da_ULA,&integral_ULAfld), pba->error_message, pba->error_message);
-    pvecback[pba->index_bg_w_ULAfld] = w_ULAfld;
+    /* get w_ from dedicated function */
+    class_call(background_w_ULA(pba,a,&w_ULA,&dw_over_da_U,&integral_ULA), pba->error_message, pba->error_message);
+    pvecback[pba->index_bg_w_ULA] = w_ULA;
 
-    rho_tot += pvecback[pba->index_bg_rho_ULAfld];
-    p_tot += w_ULAfld * pvecback[pba->index_bg_rho_ULAfld];
-    dp_dloga += (a*dw_over_da-3*(1+w_ULAfld)*w_ULAfld)*pvecback[pba->index_bg_rho_fld];
+    // Obsolete: at the beginning, we had here the analytic integral solution corresponding to the case w=w0+w1(1-a/a0):
+    // pvecback[pba->index_bg_rho_] = pba->Omega0_ * pow(pba->H0,2) / pow(a_rel,3.*(1.+pba->w0_+pba->wa_)) * exp(3.*pba->wa_*(a_rel-1.));
+    // But now everthing is integrated numerically for a given w_(a) defined in the function background_w_.
+
+    rho_tot += pvecback[pba->index_bg_rho_ULA];
+    p_tot += w_ULA * pvecback[pba->index_bg_rho_ULA];
+    dp_dloga += (a*dw_over_da_U-3*(1+w_ULA)*w_ULA)*pvecback[pba->index_bg_rho_ULA];
   }
 
   /* relativistic neutrinos (and all relativistic relics) */
@@ -620,26 +622,39 @@ int background_w_fld(
   return _SUCCESS_;
 }
 
-int background_w_ULAfld(
+
+
+
+
+
+
+
+int background_w_ULA(
                      struct background * pba,
                      double a,
-                     double * w_ULAfld,
-                     double * dw_over_da_ULAfld,
-                     double * integral_ULAfld) {
+                     double * w_ULA,
+                     double * dw_over_da_ULA,
+                     double * integral_ULA) {
+
+
+  
 
   /** - first, define the function w(a) */
-   *w_ULAfld = (1.+pba->wn_ULAfld)/(1.+pow(pba->ac_ULAfld/ a ,3.*(1.+pba->wn_ULAfld))) - 1.;
-    
+  
+    *w_ULA = ((1.+pba->wn_ULA)/(1.+pow(a*(1+pba->zc_ULA),-3.*(1.+pba->wn_ULA)))) - 1.;
 
   /** - then, give the corresponding analytic derivative dw/da (used
       by perturbation equations; we could compute it numerically,
       but with a loss of precision; as long as there is a simple
       analytic expression of the derivative of the previous
       function, let's use it! */
-  *dw_over_da_ULAfld = -3.*pow(1.+pba->wn_ULAfld,2)*pow(pba->ac_ULAfld,3.*(1.+pba->wn_ULAfld))*pow( a ,-4.-(3.*pba->wn_ULAfld))*log(1.+pow((pba->ac_ULAfld/ a ),3.*(1.+pba->wn_ULAfld)));
+ 
+
+    *dw_over_da_ULA = (3.*pow(1.+pba->wn_ULA,2.)*pow(a*(1+pba->zc_ULA),-3.*(1+pba->wn_ULA)))/(pow(1.+pow(a*(1+pba->zc_ULA),-3.*(1+pba->wn_ULA)),2.)*a);
+
 
   /** - finally, give the analytic solution of the following integral:
-        \f$ \int_{a}^{a0} da 3(1+w_{fld})/a \f$. This is used in only
+        \f$ \int_{a}^{a0} da 3(1+w_{})/a \f$. This is used in only
         one place, in the initial conditions for the background, and
         with a=a_ini. If your w(a) does not lead to a simple analytic
         solution of this integral, no worry: instead of writing
@@ -648,14 +663,25 @@ int background_w_ULAfld(
         implement a numerical calculation of this integral only for
         a=a_ini, using for instance Romberg integration. It should be
         fast, simple, and accurate enough. */
-    *integral_ULAfld = log((pow(pba->a_today/pba->ac_ULAfld,3.*(1.+pba->wn_ULAfld))+1.)/(pow( a /pba->ac_ULAfld,3.*(1.+pba->wn_ULAfld))+1.));
+
+    *integral_ULA = log((1.+pow((1+pba->zc_ULA),-3.*(1.+pba->wn_ULA)))/(pow(a,3.*(1.+pba->wn_ULA))+pow((1+pba->zc_ULA),-3.*(1.+pba->wn_ULA))));
+
+
   /** note: of course you can generalise these formulas to anything,
-      defining new parameters pba->w..._fld. Just remember that so
+      defining new parameters pba->w..._. Just remember that so
       far, HyRec explicitely assumes that w(a)= w0 + wa (1-a/a0); but
       Recfast does not assume anything */
 
   return _SUCCESS_;
 }
+
+
+
+
+
+
+
+
 /**
  * Initialize the background structure, and in particular the
  * background interpolation table.
@@ -677,7 +703,7 @@ int background_init(
   double rho_ncdm_rel,rho_nu_rel;
   double Neff, N_dark;
   double w_fld, dw_over_da, integral_fld;
-  double w_ULAfld, dw_over_da_ULA, integral_ULAfld;
+  double w_ULA, dw_over_da_U, integral_ULA;
   int filenum=0;
 
   /** - in verbose mode, provide some information */
@@ -769,15 +795,7 @@ int background_init(
                "Your choice for w(a--->0)=%g is suspicious, since it is bigger than -1/3 there cannot be radiation domination at early times\n",
                w_fld);
   }
-  if (pba->has_ULAfld == _TRUE_) {
 
-    class_call(background_w_ULAfld(pba,0.,&w_ULAfld,&dw_over_da_ULA,&integral_ULAfld), pba->error_message, pba->error_message);
-
-    class_test(w_ULAfld >= 1./3.,
-               pba->error_message,
-               "Your choice for w(a--->0)=%g is suspicious, since it is bigger than -1/3 there cannot be radiation domination at early times\n",
-               w_ULAfld);
-  }
   /* in verbose mode, inform the user about the value of the ncdm
      masses in eV and about the ratio [m/omega_ncdm] in eV (the usual
      93 point something)*/
@@ -943,7 +961,7 @@ int background_indices(
   pba->has_scf = _FALSE_;
   pba->has_lambda = _FALSE_;
   pba->has_fld = _FALSE_;
-  pba->has_ULAfld = _FALSE_;
+  pba->has_ULA = _FALSE_;
   pba->has_ur = _FALSE_;
   pba->has_idr = _FALSE_;
   pba->has_idm_dr = _FALSE_;
@@ -969,8 +987,9 @@ int background_indices(
 
   if (pba->Omega0_fld != 0.)
     pba->has_fld = _TRUE_;
-  if (pba->Omega0_ULAfld != 0.)
-    pba->has_ULAfld = _TRUE_;
+  if (pba->Omega0_ULA != 0.)
+    pba->has_ULA = _TRUE_;
+
   if (pba->Omega0_ur != 0.)
     pba->has_ur = _TRUE_;
 
@@ -1035,8 +1054,9 @@ int background_indices(
   /* - index for fluid */
   class_define_index(pba->index_bg_rho_fld,pba->has_fld,index_bg,1);
   class_define_index(pba->index_bg_w_fld,pba->has_fld,index_bg,1);
-  class_define_index(pba->index_bg_rho_ULAfld,pba->has_ULAfld,index_bg,1);
-  class_define_index(pba->index_bg_w_ULAfld,pba->has_ULAfld,index_bg,1);
+  class_define_index(pba->index_bg_rho_ULA,pba->has_ULA,index_bg,1);
+  class_define_index(pba->index_bg_w_ULA,pba->has_ULA,index_bg,1);
+
   /* - index for ultra-relativistic neutrinos/species */
   class_define_index(pba->index_bg_rho_ur,pba->has_ur,index_bg,1);
 
@@ -1118,7 +1138,8 @@ int background_indices(
 
   /* -> energy density in fluid */
   class_define_index(pba->index_bi_rho_fld,pba->has_fld,index_bi,1);
-  class_define_index(pba->index_bi_rho_ULAfld,pba->has_ULAfld,index_bi,1);
+  class_define_index(pba->index_bi_rho_ULA,pba->has_ULA,index_bi,1);
+
   /* -> scalar field and its derivative wrt conformal time (Zuma) */
   class_define_index(pba->index_bi_phi_scf,pba->has_scf,index_bi,1);
   class_define_index(pba->index_bi_phi_prime_scf,pba->has_scf,index_bi,1);
@@ -2031,10 +2052,9 @@ int background_initial_conditions(
   double f,Omega_rad, rho_rad;
   int counter,is_early_enough,n_ncdm;
   double scf_lambda;
-  double rho_fld_today;
+  double rho_fld_today, rho_ULA_today;
   double w_fld,dw_over_da_fld,integral_fld;
-  double rho_ULAfld_today;
-  double w_ULAfld,dw_over_da_ULAfld,integral_ULAfld;
+  double w_ULA,dw_over_da_ULA,integral_ULA;
 
   /** - fix initial value of \f$ a \f$ */
   a = ppr->a_ini_over_a_today_default * pba->a_today;
@@ -2138,16 +2158,22 @@ int background_initial_conditions(
     pvecback_integration[pba->index_bi_rho_fld] = rho_fld_today * exp(integral_fld);
 
   }
-  if (pba->has_ULAfld == _TRUE_){
+  if (pba->has_ULA == _TRUE_){
 
-    
-    rho_ULAfld_today = pba->Omega0_ULAfld * pow(pba->H0,2);
+    /* rho_ today */
+    rho_ULA_today = pba->Omega0_ULA * pow(pba->H0,2);
 
-    
-   class_call(background_w_ULAfld(pba,a,&w_ULAfld,&dw_over_da_ULAfld,&integral_ULAfld), pba->error_message, pba->error_message);
+    /* integrate rho_(a) from a_ini to a_0, to get rho_(a_ini) given rho_(a0) */
+    class_call(background_w_ULA(pba,a,&w_ULA,&dw_over_da_ULA,&integral_ULA), pba->error_message, pba->error_message);
 
-    
-    pvecback_integration[pba->index_bi_rho_ULAfld] = rho_ULAfld_today * exp(integral_ULAfld);
+    /* Note: for complicated w_(a) functions with no simple
+       analytic integral, this is the place were you should compute
+       numerically the simple 1d integral [int_{a_ini}^{a_0} 3
+       [(1+w_)/a] da] (e.g. with the Romberg method?) instead of
+       calling background_w_ */
+
+    /* rho_ at initial time */
+    pvecback_integration[pba->index_bi_rho_ULA] = rho_ULA_today * exp(integral_ULA);
 
   }
   /** - Fix initial value of \f$ \phi, \phi' \f$
@@ -2337,8 +2363,8 @@ int background_output_titles(struct background * pba,
   class_store_columntitle(titles,"(.)rho_lambda",pba->has_lambda);
   class_store_columntitle(titles,"(.)rho_fld",pba->has_fld);
   class_store_columntitle(titles,"(.)w_fld",pba->has_fld);
-  class_store_columntitle(titles,"(.)rho_ULAfld",pba->has_ULAfld);
-  class_store_columntitle(titles,"(.)w_ULAfld",pba->has_ULAfld);
+  class_store_columntitle(titles,"(.)rho_ULA",pba->has_ULA);
+  class_store_columntitle(titles,"(.)w_ULA",pba->has_ULA);
   class_store_columntitle(titles,"(.)rho_ur",pba->has_ur);
   class_store_columntitle(titles,"(.)rho_idr",pba->has_idr);
   class_store_columntitle(titles,"(.)rho_idm_dr",pba->has_idm_dr);
@@ -2398,8 +2424,8 @@ int background_output_data(
     class_store_double(dataptr,pvecback[pba->index_bg_rho_lambda],pba->has_lambda,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_fld],pba->has_fld,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_w_fld],pba->has_fld,storeidx);
-    class_store_double(dataptr,pvecback[pba->index_bg_rho_ULAfld],pba->has_ULAfld,storeidx);
-    class_store_double(dataptr,pvecback[pba->index_bg_w_ULAfld],pba->has_ULAfld,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_rho_ULA],pba->has_ULA,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_w_ULA],pba->has_ULA,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_ur],pba->has_ur,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_idr],pba->has_idr,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_idm_dr],pba->has_idm_dr,storeidx);
@@ -2522,9 +2548,12 @@ int background_derivs(
     /** - Compute fld density \f$ \rho' = -3aH (1+w_{fld}(a)) \rho \f$ */
     dy[pba->index_bi_rho_fld] = -3.*y[pba->index_bi_a]*pvecback[pba->index_bg_H]*(1.+pvecback[pba->index_bg_w_fld])*y[pba->index_bi_rho_fld];
   }
-  if (pba->has_ULAfld == _TRUE_) {
-    dy[pba->index_bi_rho_ULAfld] = -3.*y[pba->index_bi_a]*pvecback[pba->index_bg_H]*(1.+pvecback[pba->index_bg_w_ULAfld])*y[pba->index_bi_rho_ULAfld];
+
+  if (pba->has_ULA == _TRUE_) {
+    /** - Compute  density \f$ \rho' = -3aH (1+w_{}(a)) \rho \f$ */
+    dy[pba->index_bi_rho_ULA] = -3.*y[pba->index_bi_a]*pvecback[pba->index_bg_H]*(1.+pvecback[pba->index_bg_w_ULA])*y[pba->index_bi_rho_ULA];
   }
+  
   if (pba->has_scf == _TRUE_){
     /** - Scalar field equation: \f$ \phi'' + 2 a H \phi' + a^2 dV = 0 \f$  (note H is wrt cosmic time) */
     dy[pba->index_bi_phi_scf] = y[pba->index_bi_phi_prime_scf];
@@ -2733,7 +2762,7 @@ int background_output_budget(
       }
     }
 
-    if(pba->has_lambda || pba->has_fld || pba->has_scf || pba->has_curvature){
+    if(pba->has_lambda || pba->has_fld || pba->has_scf || pba->has_curvature  || pba->has_ULA){
       printf(" ---> Other Content \n");
     }
     if(pba->has_lambda){
@@ -2743,6 +2772,10 @@ int background_output_budget(
     if(pba->has_fld){
       _class_print_species_("Dark Energy Fluid",fld);
       budget_other+=pba->Omega0_fld;
+      }
+    if(pba->has_ULA){
+      _class_print_species_("Axion fluid",ULA);
+      budget_other+=pba->Omega0_ULA;
     }
     if(pba->has_scf){
       _class_print_species_("Scalar Field",scf);
@@ -2759,7 +2792,7 @@ int background_output_budget(
     if(pba->N_ncdm > 0){
       printf(" Neutrinos                        Omega = %-15g , omega = %-15g \n",budget_neutrino,budget_neutrino*pba->h*pba->h);
     }
-    if(pba->has_lambda || pba->has_fld || pba->has_scf || pba->has_curvature){
+    if(pba->has_lambda || pba->has_fld || pba->has_scf || pba->has_curvature || pba->has_ULA){
       printf(" Other Content                    Omega = %-15g , omega = %-15g \n",budget_other,budget_other*pba->h*pba->h);
     }
     printf(" TOTAL                            Omega = %-15g , omega = %-15g \n",budget_radiation+budget_matter+budget_neutrino+budget_other,(budget_radiation+budget_matter+budget_neutrino+budget_other)*pba->h*pba->h);

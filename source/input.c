@@ -839,6 +839,14 @@ int input_read_parameters(
   if (flag1 == _TRUE_) ppt->three_cvis2_ur = 3.*param1;
 
   Omega_tot += pba->Omega0_ur;
+  
+  class_read_double("Omega_ULA",pba->Omega0_ULA);
+  class_read_double("n_ULA",pba->n_ULA);
+  class_read_double("zc_ULA",pba->zc_ULA);
+  class_read_double("freq0_ULA",pba->freq0_ULA);
+  pba->wn_ULA = (pba->n_ULA-1.)/(pba->n_ULA+1.);
+  
+  Omega_tot += pba->Omega0_ULA;
 
   /** - Omega_0_idr (interacting dark radiation) */
   /* Can take both the ethos parameters, and the NADM parameters */
@@ -896,14 +904,6 @@ int input_read_parameters(
   if ((ppt->gauge == synchronous) && (pba->Omega0_cdm==0)) pba->Omega0_cdm = ppr->Omega0_cdm_min_synchronous;
 
   Omega_tot += pba->Omega0_cdm;
-
-  class_read_double("Omega_ULAfld",pba->Omega0_ULAfld);
-  class_read_double("n_ULAfld",pba->n_ULAfld);
-  class_read_double("zc_ULAfld",pba->zc_ULAfld);
-  class_read_double("freq0_ULAfld",pba->freq0_ULAfld);
-  pba->wn_ULAfld = (pba->n_ULAfld-1.)/(pba->n_ULAfld+1.);
-  pba->ac_ULAfld = pow(1.+pba->zc_ULAfld,-1.);
-  Omega_tot += pba->Omega0_ULAfld;
 
   /** - Omega_0_icdm_dr (DM interacting with DR) */
   class_call(parser_read_double(pfc,"Omega_idm_dr",&param1,&flag1,errmsg),
@@ -1062,6 +1062,10 @@ int input_read_parameters(
       class_alloc(ppt->beta_idr,(ppr->l_max_idr-1)*sizeof(double),errmsg);
       for(n=0; n<(ppr->l_max_idr-1); n++) ppt->beta_idr[n] = 1.5;
     }
+  }
+  else {
+    ppt->alpha_idm_dr = NULL;
+    ppt->beta_idr = NULL;
   }
 
   /** - Omega_0_dcdmdr (DCDM) */
@@ -1671,10 +1675,15 @@ int input_read_parameters(
 
   }
 
-  /* The following lines make sure that if perturbations are not computed, IDR parameters are still freed */
+  /* The following lines make sure that if perturbations are not computed, idm_dr and idr parameters are still freed */
+
   if(ppt->has_perturbations == _FALSE_) {
-    free(ppt->alpha_idm_dr);
-    free(ppt->beta_idr);
+
+    if (ppt->alpha_idm_dr != NULL)
+      free(ppt->alpha_idm_dr);
+
+    if (ppt->beta_idr != NULL)
+      free(ppt->beta_idr);
   }
 
   if (ppt->has_density_transfers == _TRUE_) {
@@ -3204,14 +3213,8 @@ int input_default_params(
   pba->Omega0_k = 0.;
   pba->K = 0.;
   pba->sgnK = 0;
-  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr-pba->Omega0_idm_dr-pba->Omega0_idr-pba->Omega0_ULAfld;
+  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr-pba->Omega0_idm_dr-pba->Omega0_idr-pba->Omega0_ULA;
   pba->Omega0_fld = 0.;
-  pba->Omega0_ULAfld = 0.;
-  pba->wn_ULAfld = 0.;
-  pba->zc_ULAfld = 1.0e5;
-  pba->freq0_ULAfld = 341.7;
-  pba->n_ULAfld = 1.;
-  pba->ac_ULAfld = 1.0e-5;
   pba->a_today = 1.;
   pba->use_ppf = _TRUE_;
   pba->c_gamma_over_c_fld = 0.4;
@@ -3220,6 +3223,12 @@ int input_default_params(
   pba->wa_fld = 0.;
   pba->Omega_EDE = 0.;
   pba->cs2_fld = 1.;
+  pba->Omega0_ULA = 0.;
+  pba->wn_ULA = 0.;
+  pba->zc_ULA = 1.0e5;
+  pba->freq0_ULA = 341.7;
+  pba->n_ULA = 1.;
+  
 
   pba->shooting_failed = _FALSE_;
 

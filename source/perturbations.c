@@ -229,7 +229,7 @@ int perturb_output_data(
           class_store_double(dataptr,tk[ppt->index_tp_delta_cdm],ppt->has_source_delta_cdm,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_idm_dr],ppt->has_source_delta_idm_dr,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_fld],ppt->has_source_delta_fld,storeidx);
-	  class_store_double(dataptr,tk[ppt->index_tp_delta_ULAfld],ppt->has_source_delta_ULAfld,storeidx);
+	  class_store_double(dataptr,tk[ppt->index_tp_delta_ULA],ppt->has_source_delta_ULA,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_ur],ppt->has_source_delta_ur,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_delta_idr],ppt->has_source_delta_idr,storeidx);
           if (pba->has_ncdm == _TRUE_){
@@ -258,7 +258,7 @@ int perturb_output_data(
           class_store_double(dataptr,tk[ppt->index_tp_theta_cdm],ppt->has_source_theta_cdm,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_idm_dr],ppt->has_source_theta_idm_dr,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_fld],ppt->has_source_theta_fld,storeidx);
-	  class_store_double(dataptr,tk[ppt->index_tp_u_ULAfld],ppt->has_source_u_ULAfld,storeidx);
+	  class_store_double(dataptr,tk[ppt->index_tp_u_ULA],ppt->has_source_u_ULA,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_ur],ppt->has_source_theta_ur,storeidx);
           class_store_double(dataptr,tk[ppt->index_tp_theta_idr],ppt->has_source_theta_idr,storeidx);
           if (pba->has_ncdm == _TRUE_){
@@ -324,7 +324,7 @@ int perturb_output_titles(
       class_store_columntitle(titles,"d_cdm",pba->has_cdm);
       class_store_columntitle(titles,"d_idm_dr",pba->has_idm_dr);
       class_store_columntitle(titles,"d_fld",pba->has_fld);
-      class_store_columntitle(titles,"d_ULAfld",pba->has_ULAfld);
+      class_store_columntitle(titles,"d_ULA",pba->has_ULA);
       class_store_columntitle(titles,"d_ur",pba->has_ur);
       class_store_columntitle(titles,"d_idr",pba->has_idr);
       if (pba->has_ncdm == _TRUE_) {
@@ -354,7 +354,7 @@ int perturb_output_titles(
       class_store_columntitle(titles,"t_cdm",((pba->has_cdm == _TRUE_) && (ppt->gauge != synchronous)));
       class_store_columntitle(titles,"t_idm_dr",pba->has_idm_dr);
       class_store_columntitle(titles,"t_fld",pba->has_fld);
-      class_store_columntitle(titles,"t_ULAfld",pba->has_ULAfld);
+      class_store_columntitle(titles,"t_ULA",pba->has_ULA);
       class_store_columntitle(titles,"t_ur",pba->has_ur);
       class_store_columntitle(titles,"t_idr",pba->has_idr);
       if (pba->has_ncdm == _TRUE_) {
@@ -482,7 +482,7 @@ int perturb_init(
   struct perturb_workspace ** pppw;
   /* background quantities */
   double w_fld_ini, w_fld_0,dw_over_da_fld,integral_fld;
-  double w_ULAfld_ini, w_ULAfld_0,dw_over_da_ULAfld,integral_ULAfld;
+  double w_ULA_ini, w_ULA_0,dw_over_da_ULA,integral_ULA;
   /* number of threads (always one if no openmp) */
   int number_of_threads=1;
   /* index of the thread (always 0 if no openmp) */
@@ -584,10 +584,10 @@ int perturb_init(
 
   }
 
-    if (pba->has_ULAfld == _TRUE_) {
+    if (pba->has_ULA == _TRUE_) {
 
-    class_call(background_w_ULAfld(pba,     0.,   &w_ULAfld_ini,&dw_over_da_ULAfld,&integral_ULAfld), pba->error_message, ppt->error_message);
-    class_call(background_w_ULAfld(pba,pba->a_today,&w_ULAfld_0,&dw_over_da_ULAfld,&integral_ULAfld), pba->error_message, ppt->error_message);
+    class_call(background_w_ULA(pba,     0.,   &w_ULA_ini,&dw_over_da_ULA,&integral_ULA), pba->error_message, ppt->error_message);
+    class_call(background_w_ULA(pba,pba->a_today,&w_ULA_0,&dw_over_da_ULA,&integral_ULA), pba->error_message, ppt->error_message);
   }
 
   if (pba->has_dcdm == _TRUE_) {
@@ -1052,7 +1052,7 @@ int perturb_indices_of_perturbs(
   ppt->has_source_delta_cdm = _FALSE_;
   ppt->has_source_delta_dcdm = _FALSE_;
   ppt->has_source_delta_fld = _FALSE_;
-  ppt->has_source_delta_ULAfld = _FALSE_;
+  ppt->has_source_delta_ULA = _FALSE_;
   ppt->has_source_delta_scf = _FALSE_;
   ppt->has_source_delta_dr = _FALSE_;
   ppt->has_source_delta_ur = _FALSE_;
@@ -1067,7 +1067,7 @@ int perturb_indices_of_perturbs(
   ppt->has_source_theta_cdm = _FALSE_;
   ppt->has_source_theta_dcdm = _FALSE_;
   ppt->has_source_theta_fld = _FALSE_;
-  ppt->has_source_u_ULAfld = _FALSE_;
+  ppt->has_source_u_ULA = _FALSE_;
   ppt->has_source_theta_scf = _FALSE_;
   ppt->has_source_theta_dr = _FALSE_;
   ppt->has_source_theta_ur = _FALSE_;
@@ -1158,8 +1158,8 @@ int perturb_indices_of_perturbs(
           ppt->has_source_delta_dcdm = _TRUE_;
         if (pba->has_fld == _TRUE_)
           ppt->has_source_delta_fld = _TRUE_;
-	 if (pba->has_ULAfld == _TRUE_)
-          ppt->has_source_delta_ULAfld = _TRUE_;
+	 if (pba->has_ULA == _TRUE_)
+          ppt->has_source_delta_ULA = _TRUE_;
         if (pba->has_scf == _TRUE_)
           ppt->has_source_delta_scf = _TRUE_;
         if (pba->has_ur == _TRUE_)
@@ -1191,8 +1191,8 @@ int perturb_indices_of_perturbs(
           ppt->has_source_theta_dcdm = _TRUE_;
         if (pba->has_fld == _TRUE_)
           ppt->has_source_theta_fld = _TRUE_;
-	if (pba->has_ULAfld == _TRUE_)
-          ppt->has_source_u_ULAfld = _TRUE_;
+	if (pba->has_ULA == _TRUE_)
+          ppt->has_source_u_ULA = _TRUE_;
         if (pba->has_scf == _TRUE_)
           ppt->has_source_theta_scf = _TRUE_;
         if (pba->has_ur == _TRUE_)
@@ -1269,7 +1269,7 @@ int perturb_indices_of_perturbs(
       class_define_index(ppt->index_tp_delta_cdm,  ppt->has_source_delta_cdm, index_type,1);
       class_define_index(ppt->index_tp_delta_dcdm, ppt->has_source_delta_dcdm,index_type,1);
       class_define_index(ppt->index_tp_delta_fld,  ppt->has_source_delta_fld, index_type,1);
-      class_define_index(ppt->index_tp_delta_ULAfld,  ppt->has_source_delta_ULAfld, index_type,1);
+      class_define_index(ppt->index_tp_delta_ULA,  ppt->has_source_delta_ULA, index_type,1);
       class_define_index(ppt->index_tp_delta_scf,  ppt->has_source_delta_scf, index_type,1);
       class_define_index(ppt->index_tp_delta_dr,   ppt->has_source_delta_dr,  index_type,1);
       class_define_index(ppt->index_tp_delta_ur,   ppt->has_source_delta_ur,  index_type,1);
@@ -1284,7 +1284,7 @@ int perturb_indices_of_perturbs(
       class_define_index(ppt->index_tp_theta_cdm,  ppt->has_source_theta_cdm, index_type,1);
       class_define_index(ppt->index_tp_theta_dcdm, ppt->has_source_theta_dcdm,index_type,1);
       class_define_index(ppt->index_tp_theta_fld,  ppt->has_source_theta_fld, index_type,1);
-      class_define_index(ppt->index_tp_u_ULAfld,  ppt->has_source_u_ULAfld, index_type,1);
+      class_define_index(ppt->index_tp_u_ULA,  ppt->has_source_u_ULA, index_type,1);
       class_define_index(ppt->index_tp_theta_scf,  ppt->has_source_theta_scf, index_type,1);
       class_define_index(ppt->index_tp_theta_dr,   ppt->has_source_theta_dr,  index_type,1);
       class_define_index(ppt->index_tp_theta_ur,   ppt->has_source_theta_ur,  index_type,1);
@@ -3177,9 +3177,9 @@ int perturb_prepare_k_output(struct background * pba,
       class_store_columntitle(ppt->scalar_titles, "delta_rho_fld", pba->has_fld);
       class_store_columntitle(ppt->scalar_titles, "rho_plus_p_theta_fld", pba->has_fld);
       class_store_columntitle(ppt->scalar_titles, "delta_p_fld", pba->has_fld);
-      class_store_columntitle(ppt->scalar_titles, "delta_rho_ULAfld", pba->has_ULAfld);
-      class_store_columntitle(ppt->scalar_titles, "rho_plus_p_u_ULAfld", pba->has_ULAfld);
-      class_store_columntitle(ppt->scalar_titles, "delta_p_ULAfld", pba->has_ULAfld);
+      class_store_columntitle(ppt->scalar_titles, "delta_rho_ULA", pba->has_ULA);
+      class_store_columntitle(ppt->scalar_titles, "rho_plus_p_u_ULA", pba->has_ULA);
+      class_store_columntitle(ppt->scalar_titles, "delta_p_ULA", pba->has_ULA);
 
       ppt->number_of_scalar_titles =
         get_number_of_titles(ppt->scalar_titles);
@@ -3754,8 +3754,8 @@ int perturb_vector_init(
       ppv->l_max_dr = ppr->l_max_dr;
       class_define_index(ppv->index_pt_F0_dr,_TRUE_,index_pt,ppv->l_max_dr+1); /* all momenta in Boltzmann hierarchy  */
     }
-      class_define_index(ppv->index_pt_delta_ULAfld,pba->has_ULAfld,index_pt,1); /* fluid density */
-      class_define_index(ppv->index_pt_u_ULAfld,pba->has_ULAfld,index_pt,1); /* fluid velocity */
+      class_define_index(ppv->index_pt_delta_ULA,pba->has_ULA,index_pt,1); /* fluid density */
+      class_define_index(ppv->index_pt_u_ULA,pba->has_ULA,index_pt,1); /* fluid velocity */
     /* fluid */
 
     if (pba->use_ppf == _FALSE_) {
@@ -4235,13 +4235,13 @@ int perturb_vector_init(
             ppw->pv->y[ppw->pv->index_pt_Gamma_fld];
         }
       }
-       if (pba->has_ULAfld == _TRUE_) {
+       if (pba->has_ULA == _TRUE_) {
 
-          ppv->y[ppv->index_pt_delta_ULAfld] =
-            ppw->pv->y[ppw->pv->index_pt_delta_ULAfld];
+          ppv->y[ppv->index_pt_delta_ULA] =
+            ppw->pv->y[ppw->pv->index_pt_delta_ULA];
 
-          ppv->y[ppv->index_pt_u_ULAfld] =
-            ppw->pv->y[ppw->pv->index_pt_u_ULAfld];
+          ppv->y[ppv->index_pt_u_ULA] =
+            ppw->pv->y[ppw->pv->index_pt_u_ULA];
         }
 
       if (pba->has_scf == _TRUE_) {
@@ -5109,7 +5109,7 @@ int perturb_initial_conditions(struct precision * ppr,
 
   double a,a_prime_over_a;
   double w_fld,dw_over_da_fld,integral_fld;
-  double w_ULAfld,dw_over_da_ULAfld,integral_ULAfld,cs2_ULAfld;
+  double w_ULA,dw_over_da_ULA,integral_ULA,cs2_ULA;
   double delta_ur=0.,theta_ur=0.,shear_ur=0.,l3_ur=0.,eta=0.,delta_cdm=0.,alpha, alpha_prime;
   double delta_dr=0;
   double q,epsilon,k2;
@@ -5289,16 +5289,16 @@ int perturb_initial_conditions(struct precision * ppr,
         }
         /* if use_ppf == _TRUE_, y[ppw->pv->index_pt_Gamma_fld] will be automatically set to zero, and this is what we want (although one could probably work out some small nonzero initial conditions: TODO) */
       }
-       if (pba->has_ULAfld == _TRUE_) {
-        class_call(background_w_ULAfld(pba,a,&w_ULAfld,&dw_over_da_ULAfld,&integral_ULAfld), pba->error_message, ppt->error_message);
-	if ( a >pba->ac_ULAfld)       
-	cs2_ULAfld = (2.*a*a*(pba-> n_ULAfld-1.)*pow(pba->freq0_ULAfld*pow(a,-3.*pba->wn_ULAfld),2.)+k*k)/(2.*a*a*(pba-> n_ULAfld+1.)*pow(pba->freq0_ULAfld*pow(a,-3.*pba->wn_ULAfld),2.)+k*k);
+       if (pba->has_ULA == _TRUE_) {
+        class_call(background_w_ULA(pba,a,&w_ULA,&dw_over_da_ULA,&integral_ULA), pba->error_message, ppt->error_message);
+	if ( a > (1./(1.+pba->zc_ULA)))       
+	cs2_ULA = (2.*a*a*(pba-> n_ULA-1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k)/(2.*a*a*(pba-> n_ULA+1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k);
 	
-	else cs2_ULAfld = 1.;
+	else cs2_ULA = 1.;
 
-          ppw->pv->y[ppw->pv->index_pt_delta_ULAfld] = - ktau_two/4.*(1.+w_ULAfld)*(4.-3.*cs2_ULAfld)/(4.-6.*w_ULAfld+3.*cs2_ULAfld) * ppr->curvature_ini * s2_squared; /* from 1004.5509 */ //TBC: curvature
+          ppw->pv->y[ppw->pv->index_pt_delta_ULA] = - ktau_two/4.*(1.+w_ULA)*(4.-3.*cs2_ULA)/(4.-6.*w_ULA+3.*cs2_ULA) * ppr->curvature_ini * s2_squared; /* from 1004.5509 */ //TBC: curvature
 
-          ppw->pv->y[ppw->pv->index_pt_u_ULAfld] = - k*ktau_three/4.*(1.+w_ULAfld)*cs2_ULAfld/(4.-6.*w_ULAfld+3.*cs2_ULAfld) * ppr->curvature_ini * s2_squared; /* from 1004.5509 */ //TBC:curvature
+          ppw->pv->y[ppw->pv->index_pt_u_ULA] = - k*ktau_three/4.*(1.+w_ULA)*cs2_ULA/(4.-6.*w_ULA+3.*cs2_ULA) * ppr->curvature_ini * s2_squared; /* from 1004.5509 */ //TBC:curvature
         }
 
 
@@ -6515,7 +6515,7 @@ int perturb_total_stress_energy(
   int index_q,n_ncdm,idx;
   double epsilon,q,q2,cg2_ncdm,w_ncdm,rho_ncdm_bg,p_ncdm_bg,pseudo_p_ncdm;
   double w_fld,dw_over_da_fld,integral_fld;
-  double w_ULAfld,dw_over_da_ULAfld,integral_ULAfld,cs2_ULAfld;
+  double w_ULA,dw_over_da_ULA,integral_ULA,cs2_ULA;
   double gwncdm;
   double rho_relativistic;
   double rho_dr_over_f;
@@ -6524,7 +6524,7 @@ int perturb_total_stress_energy(
   double c_gamma_k_H_square;
   double Gamma_prime_plus_a_prime_over_a_Gamma, s2sq=1.;
   double w_prime_fld, ca2_fld;
-  double w_prime_ULAfld, ca2_ULAfld;
+  double w_prime_ULA, ca2_ULA;
   double alpha, alpha_prime, metric_euler;
   double rho_t, p_t, rho_t_prime, p_t_prime;
   double rho_fld, p_fld, rho_fld_prime, p_fld_prime;
@@ -6889,28 +6889,28 @@ int perturb_total_stress_energy(
     }
 
     /* add your extra species here */
-    if (pba->has_ULAfld == _TRUE_) {
+    if (pba->has_ULA == _TRUE_) {
 
-      class_call(background_w_ULAfld(pba,a,&w_ULAfld,&dw_over_da_ULAfld,&integral_ULAfld), pba->error_message, ppt->error_message);
-      w_prime_ULAfld = dw_over_da_ULAfld * a_prime_over_a * a;
+      class_call(background_w_ULA(pba,a,&w_ULA,&dw_over_da_ULA,&integral_ULA), pba->error_message, ppt->error_message);
+      w_prime_ULA = dw_over_da_ULA * a_prime_over_a * a;
 
-        ppw->delta_rho_ULAfld = ppw->pvecback[pba->index_bg_rho_ULAfld]*y[ppw->pv->index_pt_delta_ULAfld];
-        ppw->rho_plus_p_u_ULAfld = (1.+w_ULAfld)*ppw->pvecback[pba->index_bg_rho_ULAfld]*y[ppw->pv->index_pt_u_ULAfld];
-	ca2_ULAfld = w_ULAfld - w_prime_ULAfld / 3. / (1.+w_ULAfld) / a_prime_over_a;
+        ppw->delta_rho_ULA = ppw->pvecback[pba->index_bg_rho_ULA]*y[ppw->pv->index_pt_delta_ULA];
+        ppw->rho_plus_p_u_ULA = (1.+w_ULA)*ppw->pvecback[pba->index_bg_rho_ULA]*y[ppw->pv->index_pt_u_ULA];
+	ca2_ULA = w_ULA - w_prime_ULA / 3. / (1.+w_ULA) / a_prime_over_a;
 	/** We must gauge transform the pressure perturbation from the fluid rest-frame to the gauge we are working in */
-	if ( a >pba->ac_ULAfld)       
-	cs2_ULAfld = (2.*a*a*(pba-> n_ULAfld-1.)*pow(pba->freq0_ULAfld*pow(a,-3.*pba->wn_ULAfld),2.)+k*k)/(2.*a*a*(pba-> n_ULAfld+1.)*pow(pba->freq0_ULAfld*pow(a,-3.*pba->wn_ULAfld),2.)+k*k);
+	if ( a >(1./(1.+pba->zc_ULA)))       
+	cs2_ULA = (2.*a*a*(pba-> n_ULA-1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k)/(2.*a*a*(pba-> n_ULA+1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k);
 	
-	else cs2_ULAfld = 1.;
-        ppw->delta_p_ULAfld = cs2_ULAfld * ppw->delta_rho_ULAfld + (cs2_ULAfld-ca2_ULAfld)*(3.*a_prime_over_a*ppw->rho_plus_p_u_ULAfld/k/k);
+	else cs2_ULA = 1.;
+        ppw->delta_p_ULA = cs2_ULA * ppw->delta_rho_ULA + (cs2_ULA-ca2_ULA)*(3.*a_prime_over_a*ppw->rho_plus_p_u_ULA/k/k);
       
      
 
-      ppw->delta_rho += ppw->delta_rho_ULAfld;
-      ppw->rho_plus_p_theta += (ppw->rho_plus_p_u_ULAfld)/(1.+w_ULAfld);
-      ppw->delta_p += ppw->delta_p_ULAfld;
+      ppw->delta_rho += ppw->delta_rho_ULA;
+      ppw->rho_plus_p_theta += (ppw->rho_plus_p_u_ULA)/(1.+w_ULA);
+      ppw->delta_p += ppw->delta_p_ULA;
 
-      ppw->rho_plus_p_tot += (1.+w_ULAfld)*ppw->pvecback[pba->index_bg_rho_ULAfld];
+      ppw->rho_plus_p_tot += (1.+w_ULA)*ppw->pvecback[pba->index_bg_rho_ULA];
 
     }
 
@@ -7195,7 +7195,7 @@ int perturb_sources(
   double a_prime_over_a=0.;  /* (a'/a) */
   double a_prime_over_a_prime=0.;  /* (a'/a)' */
   double w_fld,dw_over_da_fld,integral_fld;
-  double w_ULAfld,dw_over_da_ULAfld,integral_ULAfld;
+  double w_ULA,dw_over_da_ULA,integral_ULA;
   int switch_isw = 1;
 
   double a_rel, a2_rel, f_dr;
@@ -7520,9 +7520,9 @@ int perturb_sources(
       _set_source_(ppt->index_tp_delta_fld) = ppw->delta_rho_fld/pvecback[pba->index_bg_rho_fld]
         + 3.*a_prime_over_a*(1.+pvecback[pba->index_bg_w_fld])*theta_over_k2; // N-body gauge correction
     }
-    if (ppt->has_source_delta_ULAfld == _TRUE_) {
-      _set_source_(ppt->index_tp_delta_ULAfld) = ppw->delta_rho_ULAfld/pvecback[pba->index_bg_rho_ULAfld]
-        + 3.*a_prime_over_a*(1.+pvecback[pba->index_bg_w_ULAfld])*theta_over_k2; // N-body gauge correction
+    if (ppt->has_source_delta_ULA == _TRUE_) {
+      _set_source_(ppt->index_tp_delta_ULA) = ppw->delta_rho_ULA/pvecback[pba->index_bg_rho_ULA]
+        + 3.*a_prime_over_a*(1.+pvecback[pba->index_bg_w_ULA])*theta_over_k2; // N-body gauge correction
     }
 
     /* delta_scf */
@@ -7642,11 +7642,11 @@ int perturb_sources(
     }
 
     /* theta_fld */
-    if (ppt->has_source_u_ULAfld == _TRUE_) {
+    if (ppt->has_source_u_ULA == _TRUE_) {
 
-      class_call(background_w_ULAfld(pba,a_rel*pba->a_today,&w_ULAfld,&dw_over_da_ULAfld,&integral_ULAfld), pba->error_message, ppt->error_message);
+      class_call(background_w_ULA(pba,a_rel*pba->a_today,&w_ULA,&dw_over_da_ULA,&integral_ULA), pba->error_message, ppt->error_message);
 
-      _set_source_(ppt->index_tp_u_ULAfld) = ppw->rho_plus_p_u_ULAfld/(1.+w_ULAfld)/pvecback[pba->index_bg_rho_ULAfld]
+      _set_source_(ppt->index_tp_u_ULA) = ppw->rho_plus_p_u_ULA/(1.+w_ULA)/pvecback[pba->index_bg_rho_ULA]
         + theta_shift; // N-body gauge correction /*ULAcheck*/
     }
 
@@ -8213,9 +8213,9 @@ int perturb_print_variables(double tau,
     class_store_double(dataptr, ppw->delta_rho_fld, pba->has_fld, storeidx);
     class_store_double(dataptr, ppw->rho_plus_p_theta_fld, pba->has_fld, storeidx);
     class_store_double(dataptr, ppw->delta_p_fld, pba->has_fld, storeidx);
-    class_store_double(dataptr, ppw->delta_rho_ULAfld, pba->has_ULAfld, storeidx);
-    class_store_double(dataptr, ppw->rho_plus_p_u_ULAfld, pba->has_ULAfld, storeidx);
-    class_store_double(dataptr, ppw->delta_p_ULAfld, pba->has_ULAfld, storeidx);
+    class_store_double(dataptr, ppw->delta_rho_ULA, pba->has_ULA, storeidx);
+    class_store_double(dataptr, ppw->rho_plus_p_u_ULA, pba->has_ULA, storeidx);
+    class_store_double(dataptr, ppw->delta_p_ULA, pba->has_ULA, storeidx);
     //fprintf(ppw->perturb_output_file,"\n");
 
   }
@@ -8424,7 +8424,7 @@ int perturb_derivs(double tau,
 
   /* for use with fluid (fld): */
   double w_fld,dw_over_da_fld,w_prime_fld,integral_fld;
-  double w_ULAfld,dw_over_da_ULAfld,w_prime_ULAfld,integral_ULAfld;
+  double w_ULA,dw_over_da_ULA,w_prime_ULA,integral_ULA;
 
 
   /* for use with non-cold dark matter (ncdm): */
@@ -8918,28 +8918,28 @@ int perturb_derivs(double tau,
       }
 
     }
-if (pba->has_ULAfld == _TRUE_) {
+if (pba->has_ULA == _TRUE_) {
 
       /** - ----> factors w, w_prime, adiabatic sound speed ca2 (all three background-related),
             plus actual sound speed in the fluid rest frame cs2 */
 
-        class_call(background_w_ULAfld(pba,a,&w_ULAfld,&dw_over_da_ULAfld,&integral_ULAfld), pba->error_message, ppt->error_message);
-        w_prime_ULAfld = dw_over_da_ULAfld * a_prime_over_a * a;
+        class_call(background_w_ULA(pba,a,&w_ULA,&dw_over_da_ULA,&integral_ULA), pba->error_message, ppt->error_message);
+        w_prime_ULA = dw_over_da_ULA * a_prime_over_a * a;
 
-        ca2 = w_ULAfld - w_prime_ULAfld / 3. / (1.+w_ULAfld) / a_prime_over_a;
-	if ( a >pba->ac_ULAfld)       
-	cs2 = (2.*a*a*(pba-> n_ULAfld-1.)*pow(pba->freq0_ULAfld*pow(a,-3.*pba->wn_ULAfld),2.)+k*k)/(2.*a*a*(pba-> n_ULAfld+1.)*pow(pba->freq0_ULAfld*pow(a,-3.*pba->wn_ULAfld),2.)+k*k);
+        ca2 = w_ULA - w_prime_ULA / 3. / (1.+w_ULA) / a_prime_over_a;
+	if ( a > (1./(1.+pba->zc_ULA)))       
+	cs2 = (2.*a*a*(pba-> n_ULA-1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k)/(2.*a*a*(pba-> n_ULA+1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k);
 	
 	else cs2 = 1.;
 
         /** - ----> fluid density */
 
-     	dy[pv->index_pt_delta_ULAfld] = 
-	  -(y[pv->index_pt_u_ULAfld]+((1.+w_ULAfld)*metric_continuity))-3.*(cs2-w_ULAfld)*a_prime_over_a*y[pv->index_pt_delta_ULAfld]-9.*(cs2-ca2)*a_prime_over_a*a_prime_over_a*y[pv->index_pt_u_ULAfld]/k2;
+     	dy[pv->index_pt_delta_ULA] = 
+	  -(y[pv->index_pt_u_ULA]+((1.+w_ULA)*metric_continuity))-3.*(cs2-w_ULA)*a_prime_over_a*y[pv->index_pt_delta_ULA]-9.*(cs2-ca2)*a_prime_over_a*a_prime_over_a*y[pv->index_pt_u_ULA]/k2;
         /** - ----> fluid velocity */
 
-	dy[pv->index_pt_u_ULAfld] = 
-	  -(1.-3.*cs2)*a_prime_over_a*y[pv->index_pt_u_ULAfld] + 3.*a_prime_over_a*(w_ULAfld-ca2)*y[pv->index_pt_u_ULAfld] +cs2*k2*y[pv->index_pt_delta_ULAfld];
+	dy[pv->index_pt_u_ULA] = 
+	  -(1.-3.*cs2)*a_prime_over_a*y[pv->index_pt_u_ULA] + 3.*a_prime_over_a*(w_ULA-ca2)*y[pv->index_pt_u_ULA] +cs2*k2*y[pv->index_pt_delta_ULA];
 
     }
 
