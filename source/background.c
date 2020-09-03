@@ -441,6 +441,8 @@ int background_functions(
     rho_tot += pvecback[pba->index_bg_rho_ULA];
     p_tot += w_ULA * pvecback[pba->index_bg_rho_ULA];
     dp_dloga += (a*dw_over_da_U-3*(1+w_ULA)*w_ULA)*pvecback[pba->index_bg_rho_ULA];
+    rho_r += 3.*w_ULA * pvecback[pba->index_bg_rho_ULA]; 
+    rho_m -= pvecback[pba->index_bg_rho_ULA] - (3.*w_ULA * pvecback[pba->index_bg_rho_ULA]);
   }
 
   /* relativistic neutrinos (and all relativistic relics) */
@@ -640,8 +642,11 @@ int background_w_ULA(
   
 
   /** - first, define the function w(a) */
-  
-    *w_ULA = ((1.+pba->wn_ULA)/(1.+pow(a*(1+pba->zc_ULA),-3.*(1.+pba->wn_ULA)))) - 1.;
+ *w_ULA = 1./3 - ((6./9)/(1.+pow(a*(1+pba->zc_ULA),-3.*(6./9))));
+	if (a>1./3500) *w_ULA = 1./3;
+	
+	/**w_ULA = ((4./3)/(1.+pow(a*(1+pba->zc_ULA),-4.)))-1.;
+	/*if (*w_ULA < -0.3332) *w_ULA = 1./3
 
   /** - then, give the corresponding analytic derivative dw/da (used
       by perturbation equations; we could compute it numerically,
@@ -650,7 +655,7 @@ int background_w_ULA(
       function, let's use it! */
  
 
-    *dw_over_da_ULA = (3.*pow(1.+pba->wn_ULA,2.)*pow(a*(1+pba->zc_ULA),-3.*(1+pba->wn_ULA)))/(pow(1.+pow(a*(1+pba->zc_ULA),-3.*(1+pba->wn_ULA)),2.)*a);
+    *dw_over_da_ULA = -(3.*pow(6./9,2.)*pow(a*(1+pba->zc_ULA),-3.*(6./9)))/(pow(1.+pow(a*(1+pba->zc_ULA),-3.*(6./9.)),2.)*a);
 
 
   /** - finally, give the analytic solution of the following integral:
@@ -664,8 +669,8 @@ int background_w_ULA(
         a=a_ini, using for instance Romberg integration. It should be
         fast, simple, and accurate enough. */
 
-    *integral_ULA = log((1.+pow((1+pba->zc_ULA),-3.*(1.+pba->wn_ULA)))/(pow(a,3.*(1.+pba->wn_ULA))+pow((1+pba->zc_ULA),-3.*(1.+pba->wn_ULA))));
-
+   *integral_ULA = -4.*log(a)+log((a*(1+pba->zc_ULA)+1.)/(2.+pba->zc_ULA));
+	
 
   /** note: of course you can generalise these formulas to anything,
       defining new parameters pba->w..._. Just remember that so

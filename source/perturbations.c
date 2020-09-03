@@ -5109,7 +5109,7 @@ int perturb_initial_conditions(struct precision * ppr,
 
   double a,a_prime_over_a;
   double w_fld,dw_over_da_fld,integral_fld;
-  double w_ULA,dw_over_da_ULA,integral_ULA,cs2_ULA;
+  double w_ULA,dw_over_da_ULA,integral_ULA,cs2_ULA,w_prime_ULA;
   double delta_ur=0.,theta_ur=0.,shear_ur=0.,l3_ur=0.,eta=0.,delta_cdm=0.,alpha, alpha_prime;
   double delta_dr=0;
   double q,epsilon,k2;
@@ -5291,10 +5291,10 @@ int perturb_initial_conditions(struct precision * ppr,
       }
        if (pba->has_ULA == _TRUE_) {
         class_call(background_w_ULA(pba,a,&w_ULA,&dw_over_da_ULA,&integral_ULA), pba->error_message, ppt->error_message);
-	if ( a > (1./(1.+pba->zc_ULA)))       
-	cs2_ULA = (2.*a*a*(pba-> n_ULA-1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k)/(2.*a*a*(pba-> n_ULA+1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k);
-	
-	else cs2_ULA = 1.;
+	w_prime_ULA = dw_over_da_ULA * a_prime_over_a * a;
+
+        cs2_ULA = w_ULA - w_prime_ULA / 3. / (1.+w_ULA) / a_prime_over_a;
+	if (cs2_ULA<0.15) cs2_ULA = 1./3;
 
           ppw->pv->y[ppw->pv->index_pt_delta_ULA] = - ktau_two/4.*(1.+w_ULA)*(4.-3.*cs2_ULA)/(4.-6.*w_ULA+3.*cs2_ULA) * ppr->curvature_ini * s2_squared; /* from 1004.5509 */ //TBC: curvature
 
@@ -5562,6 +5562,7 @@ int perturb_initial_conditions(struct precision * ppr,
         ppw->pv->y[ppw->pv->index_pt_delta_fld] += 3*(1.+w_fld)*a_prime_over_a*alpha;
         ppw->pv->y[ppw->pv->index_pt_theta_fld] += k*k*alpha;
       }
+	
 
       /* scalar field: check */
       if (pba->has_scf == _TRUE_) {
@@ -6898,10 +6899,8 @@ int perturb_total_stress_energy(
         ppw->rho_plus_p_u_ULA = (1.+w_ULA)*ppw->pvecback[pba->index_bg_rho_ULA]*y[ppw->pv->index_pt_u_ULA];
 	ca2_ULA = w_ULA - w_prime_ULA / 3. / (1.+w_ULA) / a_prime_over_a;
 	/** We must gauge transform the pressure perturbation from the fluid rest-frame to the gauge we are working in */
-	if ( a >(1./(1.+pba->zc_ULA)))       
-	cs2_ULA = (2.*a*a*(pba-> n_ULA-1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k)/(2.*a*a*(pba-> n_ULA+1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k);
-	
-	else cs2_ULA = 1.;
+	cs2_ULA = ca2_ULA;
+	if (cs2_ULA<0.15) cs2_ULA = 1./3;
         ppw->delta_p_ULA = cs2_ULA * ppw->delta_rho_ULA + (cs2_ULA-ca2_ULA)*(3.*a_prime_over_a*ppw->rho_plus_p_u_ULA/k/k);
       
      
@@ -7522,7 +7521,8 @@ int perturb_sources(
     }
     if (ppt->has_source_delta_ULA == _TRUE_) {
       _set_source_(ppt->index_tp_delta_ULA) = ppw->delta_rho_ULA/pvecback[pba->index_bg_rho_ULA]
-        + 3.*a_prime_over_a*(1.+pvecback[pba->index_bg_w_ULA])*theta_over_k2; // N-body gauge correction
+        + 3.*a_prime_over_a*(1.+pvecback[pba->index_bg_w_ULA])*theta_over_k2;
+ 	 // N-body gauge correction
     }
 
     /* delta_scf */
@@ -7787,7 +7787,7 @@ int perturb_print_variables(double tau,
 
   double delta_g,theta_g,shear_g,l4_g,pol0_g,pol1_g,pol2_g,pol4_g;
   double delta_b,theta_b;
-  double delta_cdm=0.,theta_cdm=0.;
+  double delta_cdm=0.,theta_cdm=0., delta_ULA=0.;
   double delta_idm_dr=0.,theta_idm_dr=0.;
   double delta_dcdm=0.,theta_dcdm=0.;
   double delta_dr=0.,theta_dr=0.,shear_dr=0., f_dr=1.0;
@@ -7974,6 +7974,8 @@ int perturb_print_variables(double tau,
         theta_cdm = y[ppw->pv->index_pt_theta_cdm];
       }
     }
+   if (pba->has_ULA == _TRUE_) delta_ULA = y[ppw->pv->index_pt_delta_ULA];
+                  
 
     /* gravitational potentials */
     if (ppt->gauge == synchronous) {
@@ -8213,7 +8215,7 @@ int perturb_print_variables(double tau,
     class_store_double(dataptr, ppw->delta_rho_fld, pba->has_fld, storeidx);
     class_store_double(dataptr, ppw->rho_plus_p_theta_fld, pba->has_fld, storeidx);
     class_store_double(dataptr, ppw->delta_p_fld, pba->has_fld, storeidx);
-    class_store_double(dataptr, ppw->delta_rho_ULA, pba->has_ULA, storeidx);
+    class_store_double(dataptr, delta_ULA, pba->has_ULA, storeidx);
     class_store_double(dataptr, ppw->rho_plus_p_u_ULA, pba->has_ULA, storeidx);
     class_store_double(dataptr, ppw->delta_p_ULA, pba->has_ULA, storeidx);
     //fprintf(ppw->perturb_output_file,"\n");
@@ -8927,10 +8929,8 @@ if (pba->has_ULA == _TRUE_) {
         w_prime_ULA = dw_over_da_ULA * a_prime_over_a * a;
 
         ca2 = w_ULA - w_prime_ULA / 3. / (1.+w_ULA) / a_prime_over_a;
-	if ( a > (1./(1.+pba->zc_ULA)))       
-	cs2 = (2.*a*a*(pba-> n_ULA-1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k)/(2.*a*a*(pba-> n_ULA+1.)*pow(pba->freq0_ULA*pow(a,-3.*pba->wn_ULA),2.)+k*k);
-	
-	else cs2 = 1.;
+	cs2 = ca2;
+	if (cs2<0.15) cs2 = 1./3;
 
         /** - ----> fluid density */
 
